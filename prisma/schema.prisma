@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum FilterType {
+  MULTI_SELECT
+  SINGLE_SELECT
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  name        String        @db.VarChar(150)
+  slug        String        @unique @db.VarChar(180)
+  description String        @db.Text
+  price       Int
+  status      ProductStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  filterValues ProductFilterValue[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("products")
+}
+
+model FilterGroup {
+  id        String     @id @default(cuid())
+  key       String     @unique @db.VarChar(50)
+  label     String     @db.VarChar(100)
+  type      FilterType @default(MULTI_SELECT)
+  isSystem  Boolean    @default(false)
+  isActive  Boolean    @default(true)
+  sortOrder Int        @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  options FilterOption[]
+
+  @@index([isActive, sortOrder])
+  @@map("filter_groups")
+}
+
+model FilterOption {
+  id        String  @id @default(cuid())
+  groupId   String
+  label     String  @db.VarChar(100)
+  slug      String  @db.VarChar(120)
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group        FilterGroup          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  filterValues ProductFilterValue[]
+
+  @@unique([groupId, slug])
+  @@index([groupId, isActive, sortOrder])
+  @@map("filter_options")
+}
+
+model ProductFilterValue {
+  productId String
+  optionId  String
+
+  createdAt DateTime @default(now())
+
+  product Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  option  FilterOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, optionId])
+  @@index([optionId])
+  @@map("product_filter_values")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique @db.VarChar(191)
+  name         String    @db.VarChar(100)
+  passwordHash String    @db.VarChar(255)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique @db.Char(64)
+  userId     String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  ipAddress  String?  @db.VarChar(45)
+  userAgent  String?  @db.VarChar(255)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
