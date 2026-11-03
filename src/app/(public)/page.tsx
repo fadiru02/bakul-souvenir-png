@@ -7,7 +7,6 @@ import {
   HandHeart,
   PackageCheck,
   Palette,
-  Sparkles,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -59,8 +58,7 @@ export default function PublicHomePage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-muted/80 via-background to-background" />
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 sm:py-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div className="space-y-6">
-            <Badge variant="secondary" className="gap-1.5">
-              <Sparkles className="size-3.5" aria-hidden="true" />
+            <Badge variant="secondary">
               Souvenir custom untuk momen spesial
             </Badge>
 

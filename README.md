@@ -33,7 +33,7 @@ produk serta filter tersebut.
 - MySQL 8 + Prisma 7.10.1 (`@prisma/adapter-mariadb`, driver `mariadb`)
 - Auth database-session (`bcryptjs`, tabel `Session`)
 - Zod 4 + Server Actions + `useActionState`
-- shadcn/ui base Radix (preset `nova`), Tailwind CSS 4, Lucide, Geist
+- shadcn/ui base Radix (preset `nova`), Tailwind CSS 4, Lucide, Plus Jakarta Sans
 
 ## Prasyarat
 
