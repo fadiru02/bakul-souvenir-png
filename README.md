@@ -307,3 +307,43 @@ Untuk perubahan host routing, uji:
 Pastikan database MySQL bisa diakses dari environment deploy dan `.env` tidak
 ikut masuk repository. Jangan set cookie session dengan domain induk; biarkan
 cookie tetap host-only untuk subdomain admin.
+
+## Panduan Kontribusi (Git Workflow)
+
+Setiap pengembangan fitur baru atau perbaikan *bug* **wajib** dilakukan pada *branch* terpisah dan tidak langsung di-push ke `main`.
+
+### 1. Ambil Kode Terbaru dari `main`
+Pastikan *branch* lokal `main` selalu sinkron dengan repository GitHub sebelum membuat *branch* baru:
+```bash
+git checkout main
+git pull origin main
+```
+
+### 2. Buat *Branch* Baru
+Buat *branch* dengan penamaan yang deskriptif sesuai jenis tugas (misalnya `feature/...` atau `fix/...`):
+```bash
+git checkout -b feature/nama-fitur
+```
+
+### 3. Verifikasi Sebelum Commit
+Pastikan tidak ada *error* tipe data, *linting*, maupun *build* sebelum menyimpan perubahan:
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
+
+### 4. Commit & Push ke GitHub
+Cek kembali file yang diubah (pastikan `.env` tidak ikut terbawa), lalu lakukan *commit* dan *push* ke *branch* kamu:
+```bash
+git status
+git add .
+git commit -m "Deskripsi singkat perubahan"
+git push -u origin feature/nama-fitur
+```
+
+### 5. Buat *Pull Request* (PR)
+1. Buka repository di GitHub dan klik **Compare & pull request**.
+2. Pastikan target penggabungan adalah **`base: main` ← `compare: feature/nama-fitur`**.
+3. Jelaskan ringkasan perubahan yang dibuat, lalu klik **Create pull request** untuk di-review sebelum di-*merge* ke `main`.
+4. 
