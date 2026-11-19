@@ -1,6 +1,7 @@
 import type {
   PublicFilterGroup,
   PublicProductFilters,
+  PublicProductPriceRange,
   PublicProductSort,
 } from "./public-types";
 
@@ -9,6 +10,13 @@ const sorts = new Set<PublicProductSort>([
   "name_asc",
   "price_asc",
   "price_desc",
+]);
+
+const priceRanges = new Set<PublicProductPriceRange>([
+  "all",
+  "lt25",
+  "25to75",
+  "gt75",
 ]);
 
 const PAGE_SIZE = 12;
@@ -45,6 +53,7 @@ export function parsePublicProductFilters(
   }
 
   const rawSort = firstValue(params.sort);
+  const rawPriceRange = firstValue(params.priceRange);
   const rawPage = Number(firstValue(params.page) ?? "1");
 
   return {
@@ -54,6 +63,10 @@ export function parsePublicProductFilters(
       rawSort && sorts.has(rawSort as PublicProductSort)
         ? (rawSort as PublicProductSort)
         : "newest",
+    priceRange:
+      rawPriceRange && priceRanges.has(rawPriceRange as PublicProductPriceRange)
+        ? (rawPriceRange as PublicProductPriceRange)
+        : "all",
     page:
       Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1,
     pageSize: PAGE_SIZE,
@@ -64,6 +77,7 @@ type CatalogHrefOverrides = {
   page?: number;
   sort?: PublicProductSort;
   q?: string;
+  priceRange?: PublicProductPriceRange;
   selections?: Record<string, string[]>;
 };
 
@@ -80,6 +94,10 @@ export function buildCatalogHref(
 
   if (merged.sort !== "newest") {
     searchParams.set("sort", merged.sort);
+  }
+
+  if (merged.priceRange && merged.priceRange !== "all") {
+    searchParams.set("priceRange", merged.priceRange);
   }
 
   for (const [key, values] of Object.entries(merged.selections)) {

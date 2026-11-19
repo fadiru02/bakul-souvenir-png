@@ -1,73 +1,79 @@
 import Link from "next/link";
-import { ArrowRight, Package } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ImagePlaceholder } from "@/components/public/image-placeholder";
 import { formatRupiah } from "@/features/catalog/service";
 import type { PublicProduct } from "@/features/catalog/public-types";
+
+const WHATSAPP_NUMBER = "6289636528462";
 
 export function ProductCard({ product }: { product: PublicProduct }) {
   const tags =
     product.filterGroups.find((group) => group.key === "tag")?.options ?? [];
+  const primaryTag = tags[0];
+  const category = product.filterGroups.find((group) => group.key !== "tag");
+
+  const whatsappMessage = encodeURIComponent(
+    `Halo Bakul Souvenir, saya tertarik dengan ${product.name} (${formatRupiah(product.price)}). Mohon info lebih lanjut.`,
+  );
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 
   return (
     <Card className="h-full pt-0">
-      <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-muted via-background to-secondary/30">
-        <Package
-          className="size-10 text-primary/50"
-          aria-hidden="true"
+      <div className="relative">
+        <ImagePlaceholder
+          className="aspect-square w-full"
+          label={product.name}
+          variant="warm"
         />
+        {primaryTag ? (
+          <Badge className="absolute top-3 left-3 bg-[#2a835f] text-white">
+            {primaryTag.label}
+          </Badge>
+        ) : null}
       </div>
 
-      <CardHeader>
-        <CardTitle className="text-base leading-snug">
+      <CardHeader className="space-y-1">
+        {category ? (
+          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#2a835f]">
+            {category.label}
+          </p>
+        ) : null}
+        <CardTitle className="font-heading text-lg leading-snug">
           <Link
             href={`/produk/${product.slug}`}
-            className="underline-offset-4 hover:underline"
+            className="hover:text-[#12544f]"
           >
             {product.name}
           </Link>
         </CardTitle>
-        <CardDescription className="line-clamp-3">
-          {product.description}
-        </CardDescription>
       </CardHeader>
 
-      <CardContent className="mt-auto space-y-3">
-        <p className="font-heading text-lg font-semibold tracking-tight">
+      <CardContent className="mt-auto">
+        <p className="font-heading text-xl font-semibold tracking-tight text-[#092328]">
           {formatRupiah(product.price)}
+          <span className="ml-1 text-xs font-normal text-[#1a4241]">/pcs</span>
         </p>
-
-        {tags.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {tags.slice(0, 3).map((tag) => (
-              <Badge key={tag.id} variant="secondary">
-                {tag.label}
-              </Badge>
-            ))}
-            {tags.length > 3 ? (
-              <Badge variant="outline">+{tags.length - 3}</Badge>
-            ) : null}
-          </div>
-        ) : null}
       </CardContent>
 
       <CardFooter>
-        <Button asChild variant="ghost" size="sm" className="w-full justify-between">
-          <Link href={`/produk/${product.slug}`}>
-            Lihat detail
-            <ArrowRight data-icon="inline-end" aria-hidden="true" />
-          </Link>
+        <Button asChild className="w-full bg-[#092328] text-white hover:bg-[#12544f]">
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+            <MessageCircle data-icon="inline-start" aria-hidden="true" />
+            Pesan via WA
+          </a>
         </Button>
       </CardFooter>
     </Card>
   );
 }
+
