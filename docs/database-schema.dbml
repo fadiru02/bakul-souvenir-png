@@ -1,0 +1,389 @@
+// ============================================
+// Bakul Souvenir — DBML
+// Database: MySQL 8
+// Prisma-compatible schema
+// ============================================
+
+// ============================================
+// ENUMS
+// ============================================
+
+Enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+Enum FilterType {
+  MULTI_SELECT
+  SINGLE_SELECT
+}
+
+Enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+Enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+Enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+// ============================================
+// AUTH
+// ============================================
+
+Table users {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  email varchar(191) [unique, not null]
+  name varchar(100) [not null]
+  passwordHash varchar(255) [not null]
+  phone varchar(20)
+  avatar varchar(255)
+  role UserRole [not null, default: 'CUSTOMER']
+  isActive boolean [not null, default: true]
+  lastLoginAt datetime(3)
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updatedAt datetime(3) [not null]
+
+  indexes {
+    email [unique, name: "users_email_key"]
+    role [name: "users_role_idx"]
+  }
+}
+
+Table sessions {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  tokenHash char(64) [unique, not null]
+  userId varchar(191) [not null]
+  expiresAt datetime(3) [not null]
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  lastUsedAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  ipAddress varchar(45)
+  userAgent varchar(255)
+
+  indexes {
+    tokenHash [unique, name: "sessions_tokenHash_key"]
+    userId [name: "sessions_userId_idx"]
+    expiresAt [name: "sessions_expiresAt_idx"]
+  }
+}
+
+Table addresses {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  userId varchar(191) [not null]
+  label varchar(50)
+  recipientName varchar(100) [not null]
+  phone varchar(20) [not null]
+  province varchar(100) [not null]
+  city varchar(100) [not null]
+  district varchar(100)
+  postalCode varchar(10)
+  addressDetail text [not null]
+  isDefault boolean [not null, default: false]
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updatedAt datetime(3) [not null]
+
+  indexes {
+    userId [name: "addresses_userId_idx"]
+  }
+}
+
+// ============================================
+// FILTER SYSTEM (unified taxonomy)
+// ============================================
+
+Table filter_groups {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  key varchar(50) [unique, not null]
+  label varchar(100) [not null]
+  description varchar(500)
+  type FilterType [not null, default: 'MULTI_SELECT']
+  isSystem boolean [not null, default: false]
+  isFilterable boolean [not null, default: true]
+  isActive boolean [not null, default: true]
+  sortOrder int [not null, default: 0]
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updatedAt datetime(3) [not null]
+
+  indexes {
+    key [unique, name: "filter_groups_key_key"]
+    (isActive, sortOrder) [name: "filter_groups_isActive_sortOrder_idx"]
+  }
+}
+
+Table filter_options {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  groupId varchar(191) [not null]
+  label varchar(100) [not null]
+  slug varchar(120) [not null]
+  description text
+  image varchar(255)
+  icon varchar(100)
+  color varchar(7)
+  metaTitle varchar(150)
+  metaDescription varchar(300)
+  isActive boolean [not null, default: true]
+  sortOrder int [not null, default: 0]
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updatedAt datetime(3) [not null]
+
+  indexes {
+    (groupId, slug) [unique, name: "filter_options_groupId_slug_key"]
+    (groupId, isActive, sortOrder) [name: "filter_options_groupId_isActive_sortOrder_idx"]
+    slug [name: "filter_options_slug_idx"]
+  }
+}
+
+Table product_filter_values {
+  productId varchar(191) [pk, not null]
+  optionId varchar(191) [pk, not null]
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    optionId [name: "product_filter_values_optionId_idx"]
+    productId [name: "product_filter_values_productId_idx"]
+  }
+}
+
+// ============================================
+// PRODUCTS
+// ============================================
+
+Table products {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  name varchar(150) [not null]
+  slug varchar(180) [unique, not null]
+  sku varchar(50) [unique]
+  description text [not null]
+  shortDescription varchar(500)
+  price int [not null]
+  discountPrice int
+  stock int [not null, default: 0]
+  weight int [not null, default: 0]
+  mainImage varchar(255)
+  status ProductStatus [not null, default: 'DRAFT']
+  isFeatured boolean [not null, default: false]
+  views int [not null, default: 0]
+  publishedAt datetime(3)
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updatedAt datetime(3) [not null]
+
+  indexes {
+    slug [unique, name: "products_slug_key"]
+    sku [unique, name: "products_sku_key"]
+    status [name: "products_status_idx"]
+    isFeatured [name: "products_isFeatured_idx"]
+    (status, createdAt) [name: "products_status_createdAt_idx"]
+  }
+}
+
+Table product_images {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  productId varchar(191) [not null]
+  url varchar(255) [not null]
+  alt varchar(200)
+  isPrimary boolean [not null, default: false]
+  sortOrder int [not null, default: 0]
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    productId [name: "product_images_productId_idx"]
+    (productId, isPrimary) [name: "product_images_primary_idx"]
+  }
+}
+
+// ============================================
+// CART
+// ============================================
+
+Table carts {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  userId varchar(191) [not null]
+  productId varchar(191) [not null]
+  quantity int [not null, default: 1]
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updatedAt datetime(3) [not null]
+
+  indexes {
+    (userId, productId) [unique, name: "carts_userId_productId_key"]
+    userId [name: "carts_userId_idx"]
+  }
+}
+
+// ============================================
+// ORDERS
+// ============================================
+
+Table orders {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  orderNumber varchar(50) [unique, not null]
+  userId varchar(191) [not null]
+  addressId varchar(191)
+  subtotal int [not null, default: 0]
+  shippingCost int [not null, default: 0]
+  discount int [not null, default: 0]
+  totalAmount int [not null, default: 0]
+  status OrderStatus [not null, default: 'PENDING']
+  paymentStatus PaymentStatus [not null, default: 'UNPAID']
+  notes text
+  shippingCourier varchar(50)
+  shippingService varchar(50)
+  trackingNumber varchar(100)
+  paidAt datetime(3)
+  expiredAt datetime(3)
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updatedAt datetime(3) [not null]
+
+  indexes {
+    orderNumber [unique, name: "orders_orderNumber_key"]
+    userId [name: "orders_userId_idx"]
+    status [name: "orders_status_idx"]
+    paymentStatus [name: "orders_paymentStatus_idx"]
+    createdAt [name: "orders_createdAt_idx"]
+  }
+}
+
+Table order_items {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  orderId varchar(191) [not null]
+  productId varchar(191) [not null]
+  productName varchar(150) [not null]
+  productSku varchar(50)
+  productImage varchar(255)
+  price int [not null]
+  quantity int [not null]
+  subtotal int [not null]
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    orderId [name: "order_items_orderId_idx"]
+    productId [name: "order_items_productId_idx"]
+  }
+}
+
+// ============================================
+// PAYMENTS (MIDTRANS)
+// ============================================
+
+Table payments {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  orderId varchar(191) [not null]
+  paymentMethod varchar(50)
+  paymentChannel varchar(50)
+  midtransOrderId varchar(100)
+  midtransTransactionId varchar(100)
+  transactionStatus varchar(30)
+  fraudStatus varchar(20)
+  grossAmount int [not null]
+  vaNumber varchar(50)
+  paymentCode varchar(50)
+  billKey varchar(50)
+  billerCode varchar(50)
+  pdfUrl varchar(255)
+  snapToken varchar(255)
+  snapRedirectUrl varchar(255)
+  transactionTime datetime(3)
+  settlementTime datetime(3)
+  expiryTime datetime(3)
+  rawResponse json
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updatedAt datetime(3) [not null]
+
+  indexes {
+    orderId [name: "payments_orderId_idx"]
+    midtransTransactionId [name: "payments_midtransTransactionId_idx"]
+    transactionStatus [name: "payments_transactionStatus_idx"]
+  }
+}
+
+Table payment_logs {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  paymentId varchar(191)
+  orderId varchar(100)
+  transactionId varchar(100)
+  transactionStatus varchar(30)
+  statusCode varchar(10)
+  fraudStatus varchar(20)
+  signatureKey varchar(255)
+  payload json [not null]
+  ipAddress varchar(45)
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    orderId [name: "payment_logs_orderId_idx"]
+    transactionId [name: "payment_logs_transactionId_idx"]
+    createdAt [name: "payment_logs_createdAt_idx"]
+  }
+}
+
+// ============================================
+// REVIEWS
+// ============================================
+
+Table reviews {
+  id varchar(191) [pk, not null, default: `cuid()`]
+  userId varchar(191) [not null]
+  productId varchar(191) [not null]
+  orderId varchar(191)
+  rating int [not null, note: '1-5']
+  comment text
+  isVisible boolean [not null, default: true]
+  createdAt datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updatedAt datetime(3) [not null]
+
+  indexes {
+    (userId, productId) [unique, name: "reviews_userId_productId_key"]
+    productId [name: "reviews_productId_idx"]
+    rating [name: "reviews_rating_idx"]
+  }
+}
+
+// ============================================
+// RELATIONS
+// ============================================
+
+// Auth
+Ref: sessions.userId > users.id [delete: cascade, update: cascade]
+Ref: addresses.userId > users.id [delete: cascade, update: cascade]
+
+// Filter system
+Ref: filter_options.groupId > filter_groups.id [delete: cascade, update: cascade]
+Ref: product_filter_values.productId > products.id [delete: cascade, update: cascade]
+Ref: product_filter_values.optionId > filter_options.id [delete: cascade, update: cascade]
+
+// Product
+Ref: product_images.productId > products.id [delete: cascade, update: cascade]
+
+// Cart
+Ref: carts.userId > users.id [delete: cascade, update: cascade]
+Ref: carts.productId > products.id [delete: cascade, update: cascade]
+
+// Orders
+Ref: orders.userId > users.id [delete: restrict, update: cascade]
+Ref: orders.addressId > addresses.id [delete: set null, update: cascade]
+Ref: order_items.orderId > orders.id [delete: cascade, update: cascade]
+Ref: order_items.productId > products.id [delete: restrict, update: cascade]
+
+// Payments
+Ref: payments.orderId > orders.id [delete: cascade, update: cascade]
+Ref: payment_logs.paymentId > payments.id [delete: set null, update: cascade]
+
+// Reviews
+Ref: reviews.userId > users.id [delete: cascade, update: cascade]
+Ref: reviews.productId > products.id [delete: cascade, update: cascade]
+Ref: reviews.orderId > orders.id [delete: set null, update: cascade]
