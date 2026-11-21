@@ -308,42 +308,163 @@ Pastikan database MySQL bisa diakses dari environment deploy dan `.env` tidak
 ikut masuk repository. Jangan set cookie session dengan domain induk; biarkan
 cookie tetap host-only untuk subdomain admin.
 
-## Panduan Kontribusi (Git Workflow)
+# Panduan Kontribusi (Git Workflow)
 
-Setiap pengembangan fitur baru atau perbaikan *bug* **wajib** dilakukan pada *branch* terpisah dan tidak langsung di-push ke `main`.
+Setiap pengembangan fitur baru atau perbaikan *bug* **wajib** dilakukan pada *branch* terpisah dan tidak langsung di-*push* ke `main`.
 
-### 1. Ambil Kode Terbaru dari `main`
-Pastikan *branch* lokal `main` selalu sinkron dengan repository GitHub sebelum membuat *branch* baru:
+## 1. Periksa Kondisi Repository Lokal
+
+Sebelum melakukan sinkronisasi dengan GitHub, periksa kondisi repository:
+
 ```bash
-git checkout main
-git pull origin main
+git status
+git branch
 ```
 
-### 2. Buat *Branch* Baru
-Buat *branch* dengan penamaan yang deskriptif sesuai jenis tugas (misalnya `feature/...` atau `fix/...`):
+Pastikan perubahan lokal dan posisi branch sudah diketahui.
+
+## 2. Amankan Perubahan Lokal
+
+Jika terdapat perubahan lokal yang belum di-*commit*, simpan terlebih dahulu agar tidak hilang saat proses sinkronisasi.
+
+### A. Jika Ada Perubahan Lokal yang Belum Di-Commit
+
+Jika pekerjaan sudah selesai atau siap disimpan:
+
+```bash
+git add .
+git commit -m "feat: deskripsi perubahan"
+```
+
+Jika pekerjaan belum siap di-*commit*, gunakan *stash*:
+
+```bash
+git stash push -u -m "backup perubahan lokal"
+```
+
+### B. Jika Perubahan Sudah Di-Commit di `main` Lokal
+
+Jika terdapat commit pekerjaan di `main` yang belum di-*push*, buat branch fitur dari posisi commit tersebut:
+
+```bash
+git switch -c feature/nama-fitur
+git push -u origin feature/nama-fitur
+```
+
+Dengan demikian, commit pekerjaan sudah diamankan pada branch fitur.
+
+### C. Jika Repository Merupakan Hasil Clone Versi Lama
+
+Jika repository lokal berasal dari hasil `git clone` sebelum adanya pembaruan terbaru pada `main`, jangan langsung melakukan `pull` sebelum memastikan seluruh perubahan lokal sudah diamankan.
+
+Setelah perubahan lokal berhasil disimpan atau diamankan, lanjutkan ke proses sinkronisasi.
+
+## 3. Sinkronisasi dengan `main` Terbaru
+
+Setelah pekerjaan lokal diamankan, kembali ke branch `main`:
+
+```bash
+git checkout main
+git fetch origin
+git pull --ff-only origin main
+```
+
+Perintah tersebut memperbarui branch `main` lokal menggunakan versi terbaru dari GitHub tanpa membuat merge commit tambahan.
+
+Jika terdapat commit lokal yang belum diamankan atau branch mengalami kondisi yang tidak dapat di-*fast-forward*, hentikan proses dan periksa riwayat commit terlebih dahulu.
+
+## 4. Buat Branch Baru
+
+Setelah `main` berhasil diperbarui, buat branch khusus untuk fitur atau perbaikan yang akan dikerjakan.
+
+Gunakan penamaan branch yang deskriptif:
+
+- `feature/...` untuk fitur baru.
+- `fix/...` untuk perbaikan bug.
+- `refactor/...` untuk perubahan struktur kode.
+- `docs/...` untuk dokumentasi.
+
+Contoh:
+
 ```bash
 git checkout -b feature/nama-fitur
 ```
 
-### 3. Verifikasi Sebelum Commit
-Pastikan tidak ada *error* tipe data, *linting*, maupun *build* sebelum menyimpan perubahan:
+Jika menggunakan `git stash` pada langkah sebelumnya, pulihkan perubahan setelah branch baru dibuat:
+
+```bash
+git stash apply
+```
+
+Periksa kembali perubahan dan selesaikan konflik jika ada.
+
+## 5. Verifikasi Sebelum Commit
+
+Pastikan tidak ada error tipe data, *linting*, maupun *build* sebelum menyimpan perubahan:
+
 ```bash
 npm run typecheck
 npm run lint
 npm run build
 ```
 
-### 4. Commit & Push ke GitHub
-Cek kembali file yang diubah (pastikan `.env` tidak ikut terbawa), lalu lakukan *commit* dan *push* ke *branch* kamu:
+Jika salah satu perintah gagal, perbaiki terlebih dahulu sebelum membuat Pull Request.
+
+## 6. Commit & Push ke GitHub
+
+Periksa kembali file yang diubah dan pastikan file sensitif seperti `.env` tidak ikut terbawa.
+
 ```bash
 git status
 git add .
-git commit -m "Deskripsi singkat perubahan"
+git commit -m "feat: deskripsi perubahan"
 git push -u origin feature/nama-fitur
 ```
 
-### 5. Buat *Pull Request* (PR)
+Contoh pesan commit:
+
+- `feat: add product management`
+- `fix: resolve checkout validation`
+- `refactor: improve payment service`
+- `docs: update database schema`
+
+## 7. Buat Pull Request (PR)
+
 1. Buka repository di GitHub dan klik **Compare & pull request**.
 2. Pastikan target penggabungan adalah **`base: main` ← `compare: feature/nama-fitur`**.
-3. Jelaskan ringkasan perubahan yang dibuat, lalu klik **Create pull request** untuk di-review sebelum di-*merge* ke `main`.
-4. 
+3. Jelaskan ringkasan perubahan yang dibuat, termasuk fitur baru, perbaikan, atau perubahan struktur kode.
+4. Periksa tab **Files changed** untuk memastikan tidak ada perubahan yang tidak disengaja.
+5. Klik **Create pull request** untuk meminta review.
+6. Setelah perubahan disetujui dan tidak terdapat konflik, Pull Request dapat di-*merge* ke `main`.
+
+## 8. Sinkronisasi Setelah Pull Request Di-Merge
+
+Setelah Pull Request berhasil di-*merge*, seluruh anggota tim wajib memperbarui repository lokal:
+
+```bash
+git checkout main
+git pull origin main
+```
+
+Jika masih melanjutkan pekerjaan pada branch fitur yang sebelumnya digunakan:
+
+```bash
+git checkout feature/nama-fitur
+git merge main
+git push origin feature/nama-fitur
+```
+
+Dengan demikian, setiap anggota tim menggunakan basis kode terbaru dan mengurangi risiko konflik saat integrasi berikutnya.
+
+---
+
+## Aturan Utama
+
+- Jangan mengembangkan fitur langsung di `main`.
+- Selalu periksa `git status` sebelum melakukan sinkronisasi.
+- Amankan perubahan lokal sebelum melakukan `pull`.
+- Jangan melakukan `git push --force` ke `main`.
+- Jangan melakukan `git reset --hard` tanpa memastikan pekerjaan sudah diamankan.
+- Setiap fitur wajib memiliki branch masing-masing.
+- Seluruh perubahan harus melalui Pull Request sebelum masuk ke `main`.
+- Selalu gunakan kode terbaru dari `main` sebelum memulai pekerjaan baru.
