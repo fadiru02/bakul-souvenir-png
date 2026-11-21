@@ -154,6 +154,13 @@ function buildProductWhere(
           })),
         }
       : {}),
+    ...(filters.priceRange === "lt25"
+      ? { price: { lt: 25000 } }
+      : filters.priceRange === "25to75"
+        ? { price: { gte: 25000, lte: 75000 } }
+        : filters.priceRange === "gt75"
+          ? { price: { gt: 75000 } }
+          : {}),
   };
 }
 

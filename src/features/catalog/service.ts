@@ -58,17 +58,4 @@ export async function validateProductOptions(optionIds: string[]) {
   return { ok: true as const, optionIds: uniqueIds };
 }
 
-export function formatRupiah(value: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-export function formatDateTime(value: Date) {
-  return new Intl.DateTimeFormat("id-ID", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(value);
-}
+export { formatRupiah, formatDateTime } from "@/lib/format";

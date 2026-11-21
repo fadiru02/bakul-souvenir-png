@@ -7,6 +7,7 @@ import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { CatalogPagination } from "@/components/catalog/catalog-pagination";
 import { CatalogSkeleton } from "@/components/catalog/catalog-skeleton";
 import { ProductCard } from "@/components/catalog/product-card";
+import { ContactLocationSection } from "@/components/public/contact-location";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -23,7 +24,7 @@ import {
 } from "@/features/catalog/public-repository";
 
 export const metadata: Metadata = {
-  title: "Katalog Souvenir Custom",
+  title: "Katalog Lengkap Souvenir",
   description:
     "Jelajahi koleksi souvenir custom Bakul Souvenir untuk kantor, pernikahan, komunitas, dan hadiah spesial.",
   alternates: { canonical: "/produk" },
@@ -37,7 +38,9 @@ async function CatalogContent({
   const filters = parsePublicProductFilters(params, groups);
   const list = await listPublicProducts(filters);
   const hasFilters =
-    Boolean(filters.q) || Object.keys(filters.selections).length > 0;
+    Boolean(filters.q) ||
+    filters.priceRange !== "all" ||
+    Object.keys(filters.selections).length > 0;
 
   return (
     <>
@@ -45,24 +48,24 @@ async function CatalogContent({
 
       <div className="mt-8">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-          <p className="text-sm text-muted-foreground">
-            {list.total} produk ditemukan
+          <p className="text-sm font-medium text-[#092328]">
+            <span className="font-semibold">{list.total}</span> produk ditemukan
           </p>
           {filters.q ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[#1a4241]">
               Hasil untuk “{filters.q}”
             </p>
           ) : null}
         </div>
 
         {list.items.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {list.items.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (
-          <Empty className="border bg-card p-10">
+          <Empty className="border border-[#8bbb92] bg-white p-10">
             <EmptyMedia variant="icon">
               <RotateCcw aria-hidden="true" />
             </EmptyMedia>
@@ -76,7 +79,7 @@ async function CatalogContent({
             </EmptyHeader>
             {hasFilters ? (
               <EmptyContent>
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" className="border-[#8bbb92]">
                   <Link href="/produk">
                     <RotateCcw data-icon="inline-start" aria-hidden="true" />
                     Reset filter
@@ -99,21 +102,30 @@ export default function PublicProductsPage({
   searchParams,
 }: PageProps<"/produk">) {
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-12 sm:py-16">
-      <div className="mb-8 max-w-2xl space-y-3">
-        <p className="text-sm font-medium text-primary">Katalog</p>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Souvenir custom untuk setiap momen
-        </h1>
-        <p className="text-muted-foreground">
-          Temukan produk yang cocok untuk acara, komunitas, atau hadiah spesial.
-          Gunakan pencarian dan filter untuk mempersempit pilihan.
-        </p>
-      </div>
+    <div className="bg-[#ece5dd]">
+      {/* Catalog hero */}
+      <section className="border-b border-[#8bbb92]/40 bg-[#12544f]">
+        <div className="mx-auto max-w-[1240px] px-5 py-12 md:px-8 md:py-16">
+          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#8bbb92]">
+            Semua koleksi
+          </p>
+          <h1 className="mt-3 font-heading text-3xl font-semibold tracking-tight text-white md:text-4xl">
+            Katalog Lengkap Souvenir
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80">
+            Jelajahi koleksi vandel, plakat, ganci, jam, dan signage yang dapat disesuaikan
+            untuk berbagai kebutuhan.
+          </p>
+        </div>
+      </section>
 
-      <Suspense fallback={<CatalogSkeleton />}>
-        <CatalogContent searchParams={searchParams} />
-      </Suspense>
-    </section>
+      <section className="mx-auto w-full max-w-[1240px] px-5 py-12 sm:py-16 md:px-8">
+        <Suspense fallback={<CatalogSkeleton />}>
+          <CatalogContent searchParams={searchParams} />
+        </Suspense>
+      </section>
+
+      <ContactLocationSection />
+    </div>
   );
 }

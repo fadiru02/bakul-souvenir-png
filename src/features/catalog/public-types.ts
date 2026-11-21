@@ -4,10 +4,13 @@ export type PublicProductSort =
   | "price_asc"
   | "price_desc";
 
+export type PublicProductPriceRange = "all" | "lt25" | "25to75" | "gt75";
+
 export type PublicProductFilters = {
   q: string;
   selections: Record<string, string[]>;
   sort: PublicProductSort;
+  priceRange: PublicProductPriceRange;
   page: number;
   pageSize: number;
 };

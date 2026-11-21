@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,14 +13,9 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { ImagePlaceholder } from "@/components/public/image-placeholder";
+import { ContactLocationSection } from "@/components/public/contact-location";
+import { OrderWhatsAppSheet } from "@/components/catalog/order-whatsapp-sheet";
 import { getPublicProductBySlug } from "@/features/catalog/public-repository";
 import type { PublicProduct } from "@/features/catalog/public-types";
 import { formatRupiah } from "@/features/catalog/service";
@@ -87,6 +82,11 @@ function ProductDetail({ product }: { product: PublicProduct }) {
     },
   };
 
+  const tags =
+    product.filterGroups.find((group) => group.key === "tag")?.options ?? [];
+  const otherGroups = product.filterGroups.filter((group) => group.key !== "tag");
+  const categoryLabel = otherGroups[0]?.label ?? "Souvenir Custom";
+
   return (
     <>
       <script
@@ -100,12 +100,6 @@ function ProductDetail({ product }: { product: PublicProduct }) {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/">Beranda</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
               <Link href="/produk">Katalog</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
@@ -116,66 +110,98 @@ function ProductDetail({ product }: { product: PublicProduct }) {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <article>
-          <div className="flex aspect-video items-center justify-center rounded-xl border bg-gradient-to-br from-muted via-background to-secondary/30">
-            <Package className="size-14 text-primary/50" aria-hidden="true" />
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-16">
+        {/* Gallery */}
+        <div className="space-y-4">
+          <ImagePlaceholder
+            className="aspect-square w-full border border-[#8bbb92]"
+            label={product.name}
+            variant="warm"
+          />
+          <div className="grid grid-cols-3 gap-3">
+            {[0, 1, 2].map((index) => (
+              <ImagePlaceholder
+                key={index}
+                className="aspect-square w-full border border-[#8bbb92]"
+                label=""
+                variant={index === 0 ? "teal" : index === 1 ? "sage" : "dark"}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="flex flex-col justify-center">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="bg-[#d8d2c6] text-[#092328]">{categoryLabel}</Badge>
+            {tags.slice(0, 1).map((tag) => (
+              <Badge key={tag.id} className="bg-[#2a835f] text-white">
+                {tag.label}
+              </Badge>
+            ))}
           </div>
 
-          <h1 className="mt-7 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="mt-4 font-heading text-3xl font-semibold tracking-tight text-[#092328] sm:text-4xl">
             {product.name}
           </h1>
-          <p className="mt-4 whitespace-pre-line text-muted-foreground">
+          <p className="mt-3 font-heading text-3xl font-semibold tracking-tight text-[#12544f]">
+            {formatRupiah(product.price)}
+            <span className="ml-2 text-sm font-normal text-[#1a4241]">/pcs</span>
+          </p>
+          <p className="mt-5 whitespace-pre-line text-sm leading-7 text-[#1a4241]">
             {product.description}
           </p>
 
-          {product.filterGroups.length > 0 ? (
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {product.filterGroups.map((group) => (
-                <section
-                  key={group.key}
-                  className="rounded-lg border bg-card p-4"
-                >
-                  <h2 className="text-sm font-medium">{group.label}</h2>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {group.options.map((option) => (
-                      <Badge key={option.id} variant="secondary">
-                        {option.label}
-                      </Badge>
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
-          ) : null}
-        </article>
+          <div className="mt-6 border border-[#8bbb92] bg-white">
+            <table className="w-full text-sm">
+              <tbody>
+                <tr className="border-b border-[#8bbb92]/40">
+                  <th className="w-40 px-4 py-3 text-left font-medium text-[#092328]">
+                    Kategori
+                  </th>
+                  <td className="px-4 py-3 text-[#1a4241]">{categoryLabel}</td>
+                </tr>
+                <tr className="border-b border-[#8bbb92]/40">
+                  <th className="w-40 px-4 py-3 text-left font-medium text-[#092328]">
+                    Personalisasi
+                  </th>
+                  <td className="px-4 py-3 text-[#1a4241]">
+                    Logo, nama, teks, dan warna
+                  </td>
+                </tr>
+                <tr className="border-b border-[#8bbb92]/40">
+                  <th className="w-40 px-4 py-3 text-left font-medium text-[#092328]">
+                    Material
+                  </th>
+                  <td className="px-4 py-3 text-[#1a4241]">
+                    Dapat disesuaikan dengan kebutuhan
+                  </td>
+                </tr>
+                <tr>
+                  <th className="w-40 px-4 py-3 text-left font-medium text-[#092328]">
+                    Konsultasi
+                  </th>
+                  <td className="px-4 py-3 text-[#1a4241]">Gratis konsultasi desain</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-        <aside className="lg:sticky lg:top-24 lg:self-start">
-          <Card>
-            <CardHeader>
-              <CardTitle>Harga</CardTitle>
-              <CardDescription>
-                Harga produk per unit. Hubungi kami untuk detail pesanan custom.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="font-heading text-3xl font-semibold tracking-tight">
-                {formatRupiah(product.price)}
-              </p>
-            </CardContent>
-            <CardFooter className="flex-col items-stretch gap-2">
-              <Button asChild>
-                <Link href="/produk">Lihat produk lain</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/">
-                  <ArrowLeft data-icon="inline-start" aria-hidden="true" />
-                  Kembali ke beranda
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        </aside>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <OrderWhatsAppSheet product={product} />
+            <Button asChild variant="outline" className="border-[#8bbb92] text-[#092328]">
+              <Link href="/produk">
+                <ArrowLeft data-icon="inline-start" aria-hidden="true" />
+                Kembali ke Katalog
+              </Link>
+            </Button>
+          </div>
+
+          <p className="mt-4 text-xs leading-5 text-[#1a4241]">
+            Harga dapat berubah mengikuti material, ukuran, jumlah, dan tingkat kerumitan
+            desain.
+          </p>
+        </div>
       </div>
     </>
   );
@@ -192,8 +218,11 @@ export default async function ProductDetailPage({
   }
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-12 sm:py-16">
+    <section className="mx-auto w-full max-w-[1240px] px-5 py-12 sm:py-16 md:px-8">
       <ProductDetail product={product} />
+      <div className="mt-16">
+        <ContactLocationSection />
+      </div>
     </section>
   );
 }
